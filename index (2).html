@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WMS Inteligente - Sistema de Operação & Inventário</title>
+    <!-- Tailwind CSS para Design Responsivo e Moderno -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans antialiased">
+
+    <!-- Header / Barra de Topo -->
+    <header class="border-b border-slate-800 bg-slate-950 p-4 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-emerald-500 text-slate-950 p-2 rounded-lg font-bold text-xl tracking-wider">WMS</div>
+                <div>
+                    <h1 class="text-lg font-bold text-white tracking-wide">NexusFlow AI</h1>
+                    <p class="text-xs text-slate-400">Sistema Integrado de Armazém & Comunicação</p>
+                </div>
+            </div>
+            <!-- Status de Notificação do Cliente em Tempo Real -->
+            <div class="flex items-center gap-2 bg-slate-900 px-4 py-2 rounded-full border border-slate-800 text-xs md:text-sm">
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span class="text-slate-400">Canal do Cliente:</span>
+                <strong id="client-notification-badge" class="text-emerald-400 font-semibold">Ligado • Sem alertas ativos</strong>
+            </div>
+        </div>
+    </header>
+
+    <!-- Conteúdo Principal -->
+    <main class="max-w-7xl mx-auto p-4 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- COLUNA ESQUERDA: OPERAÇÃO DO ARMAZÉM (7 Colunas) -->
+        <section class="lg:col-span-7 space-y-6">
+            
+            <!-- Painel de Controlo / Entrada Dinâmica -->
+            <div class="bg-slate-950 p-6 rounded-xl border border-slate-800 shadow-xl">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                            📦 Movimentação de Mercadoria
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-1">Registe manualmente ou utilize a inteligência artificial para ler documentos e fotos.</p>
+                    </div>
+                    <!-- Botão de Ativação IA -->
+                    <button onclick="openAIModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs px-3 py-2 rounded-lg transition flex items-center gap-1.5 shadow-lg shadow-indigo-600/20">
+                        <span>✨</span> Entrada Inteligente (IA)
+                    </button>
+                </div>
+
+                <!-- Formulário Tradicional de Operação -->
+                <form id="operation-form" onsubmit="handleManualSubmit(event)" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1">Produto</label>
+                            <select id="form-product" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500" required>
+                                <option value="PROD001">Caixa de Cartão Canelado A1</option>
+                                <option value="PROD002">Fita Adesiva Industrial 50mm</option>
+                                <option value="PROD003">Película Estirável Transparente</option>
+                                <option value="PROD004">Paletes de Madeira Euro</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1">Tipo de Operação</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <label class="flex items-center justify-center p-2.5 rounded-lg border border-slate-800 bg-slate-900 cursor-pointer text-sm text-slate-300 has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-950/30 has-[:checked]:text-emerald-400 transition">
+                                    <input type="radio" name="op-type" value="IN" class="hidden" checked> 📥 Entrada
+                                </label>
+                                <label class="flex items-center justify-center p-2.5 rounded-lg border border-slate-800 bg-slate-900 cursor-pointer text-sm text-slate-300 has-[:checked]:border-rose-500 has-[:checked]:bg-rose-950/30 has-[:checked]:text-rose-400 transition">
+                                    <input type="radio" name="op-type" value="OUT" class="hidden"> 📤 Saída
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1">Quantidade de Unidades</label>
+                            <input type="number" id="form-qty" min="1" placeholder="Ex: 50" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-emerald-500" required>
+                        </div>
+                        <div class="flex items-end">
+                            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold text-sm py-2.5 px-4 rounded-lg transition">
+                                Processar e Atualizar Stock
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Tabela de Inventário em Tempo Real -->
+            <div class="bg-slate-950 rounded-xl border border-slate-800 shadow-xl overflow-hidden">
+                <div class="p-4 border-b border-slate-800 bg-slate-950 flex justify-between items-center">
+                    <h3 class="font-bold text-sm tracking-wide text-white">📊 Inventário Físico do Armazém</h3>
+                    <span class="text-xs bg-slate-900 border border-slate-800 text-slate-400 px-2 py-1 rounded">Atualização instantânea</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-slate-900/50 border-b border-slate-800 text-slate-400 font-medium text-xs">
+                                <th class="p-4">SKU / ID</th>
+                                <th class="p-4">Nome do Artigo</th>
+                                <th class="p-4 text-center">Mín. Alerta</th>
+                                <th class="p-4 text-right">Qtd. Atual</th>
+                                <th class="p-4 text-center">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventory-table-body" class="divide-y divide-slate-800/60">
+                            <!-- Inserido dinamicamente via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- COLUNA DIREITA: PORTAL DE COMUNICAÇÃO DO CLIENTE (5 Colunas) -->
+        <section class="lg:col-span-5 space-y-6">
+            
+            <!-- Visão Exclusiva do Cliente -->
+            <div class="bg-slate-950 p-6 rounded-xl border border-indigo-900/60 shadow-xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 bg-indigo-600 text-white font-bold text-[10px] uppercase px-3 py-1 rounded-bl-lg tracking-wider">
+                    Vista do Cliente
+                </div>
+                
+                <h3 class="text-base font-bold text-white mb-2 flex items-center gap-2">
+                    🖥️ Portal de Monitorização Externa
+                </h3>
+                <p class="text-xs text-slate-400 mb-6">O seu cliente acede a esta área em tempo real para acompanhar ruturas e fluxos de entrada.</p>
+
+                <!-- Status Cards Sintetizados -->
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-slate-900 p-4 rounded-lg border border-slate-800">
+                        <div class="text-xs text-slate-500 font-medium">Produtos em Alerta</div>
+                        <div id="client-alert-count" class="text-2xl font-bold text-amber-500 mt-1">0</div>
+                    </div>
+                    <div class="bg-slate-900 p-4 rounded-lg border border-slate-800">
+                        <div class="text-xs text-slate-500 font-medium">Total Unidades Armazenadas</div>
+                        <div id="client-total-units" class="text-2xl font-bold text-emerald-400 mt-1">0</div>
+                    </div>
+                </div>
+
+                <!-- Histórico de Comunicação Automatizada -->
+                <div>
+                    <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-3">💬 Alertas & Comunicações Enviadas</h4>
+                    <div id="communication-log" class="space-y-2 max-h-[280px] overflow-y-auto pr-1">
+                        <!-- Inserido via JS -->
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- JANELA MODAL: ASSISTENTE DE IA DE LEITURA (FOTOS / NOTAS) -->
+    <div id="ai-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            
+            <!-- Cabeçalho do Modal -->
+            <div class="p-4 border-b border-slate-800 bg-slate-950 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">✨</span>
+                    <div>
+                        <h3 class="font-bold text-white text-base">Assistente de IA Integrado</h3>
+                        <p class="text-[11px] text-slate-400">Extraia mercadorias automaticamente através de fotos ou faturas</p>
+                    </div>
+                </div>
+                <button onclick="closeAIModal()" class="text-slate-400 hover:text-white p-1 rounded-lg text-lg">&times;</button>
+            </div>
+
+            <!-- Corpo do Modal -->
+            <div class="p-6 space-y-4">
+                
+                <!-- Zona de Upload de Imagem -->
+                <div class="border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-xl p-6 text-center cursor-pointer transition bg-slate-950/40 group relative" id="upload-zone">
+                    <input type="file" id="ai-file-input" class="absolute inset-0 opacity-0 cursor-pointer" accept="image/*" onchange="previewImage(event)">
+                    
+                    <div id="upload-prompt" class="space-y-2">
+                        <div class="text-3xl text-slate-500 group-hover:text-indigo-400 transition">📸</div>
+                        <p class="text-sm font-medium text-slate-300">Carregar foto do produto ou nota de compra</p>
+                        <p class="text-xs text-slate-500">Formatos suportados: PNG, JPG (Simulação de Escaneamento OCR)</p>
+                    </div>
+
+                    <div id="upload-preview-container" class="hidden space-y-3">
+                        <img id="upload-preview" class="max-h-40 mx-auto rounded-lg border border-slate-700 shadow-md">
+                        <p id="upload-filename" class="text-xs text-indigo-400 font-mono"></p>
+                    </div>
+                </div>
+
+                <!-- Seleção do tipo de documento para ajudar a IA simulada -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">O que pretende que a IA analise?</label>
+                    <select id="ai-mode" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-slate-300 focus:outline-none focus:border-indigo-500">
+                        <option value="invoice">Nota de Compra / Fatura (Extração de quantidades e itens)</option>
+                        <option value="product">Foto Real do Produto (Reconhecimento visual de SKU)</option>
+                    </select>
+                </div>
+
+                <!-- Área de Processamento Animada -->
+                <div id="ai-loading" class="hidden bg-slate-950/60 border border-slate-800 rounded-lg p-4 text-center space-y-3">
+                    <div class="flex justify-center items-center gap-2">
+                        <svg class="animate-spin h-5 w-5 text-indigo-500" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span class="text-xs font-medium text-slate-300">IA está a analisar os padrões textuais e visuais...</span>
+                    </div>
+                    <div class="w-full bg-slate-800 h-1 rounded-full overflow-hidden">
+                        <div class="bg-indigo-500 h-full animate-[loading-bar_2s_ease-in-out_infinite] w-1/3"></div>
+                    </div>
+                </div>
+
+                <!-- Resultado Estruturado pela IA -->
+                <div id="ai-result" class="hidden bg-indigo-950/20 border border-indigo-900/60 rounded-lg p-4 space-y-3">
+                    <div class="flex justify-between items-center border-b border-indigo-950 pb-2">
+                        <span class="text-xs font-bold text-indigo-400 flex items-center gap-1">✔ Dados Extraídos por Visão Computacional</span>
+                        <span class="text-[10px] bg-indigo-900/40 text-indigo-300 px-1.5 py-0.5 rounded font-mono">Confiança: 98.4%</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 text-xs">
+                        <div>
+                            <span class="text-slate-500 block">Produto Detetado:</span>
+                            <strong id="ai-extracted-product" class="text-white font-medium"></strong>
+                        </div>
+                        <div>
+                            <span class="text-slate-500 block">Quantidade Encontrada:</span>
+                            <strong id="ai-extracted-qty" class="text-emerald-400 font-bold"></strong>
+                        </div>
+                    </div>
+                    <p class="text-[11px] text-slate-400 italic">Dica: A IA identificou estes parâmetros. Pode confirmar abaixo para integrar diretamente no stock físico do armazém.</p>
+                </div>
+
+            </div>
+
+            <!-- Rodapé do Modal -->
+            <div class="p-3 bg-slate-950 border-t border-slate-800 flex justify-end gap-2">
+                <button onclick="closeAIModal()" class="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white rounded-lg transition">Cancelar</button>
+                <button id="ai-btn-process" onclick="simulateAIProcessing()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs px-4 py-2 rounded-lg transition disabled:opacity-40" disabled>Analisar com IA</button>
+                <button id="ai-btn-apply" onclick="applyAIResult()" class="bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold text-xs px-4 py-2 rounded-lg transition hidden">Confirmar Entrada</button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Estilo em linha para simular animação da barra de progresso -->
+    <style>
+        @keyframes loading-bar {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(300%); }
+        }
+    </style>
+
+    <!-- MOTOR DE PROCESSAMENTO E LOGICA DE NEGÓCIO (JAVASCRIPT) -->
+    <script>
+        // Base de Dados Local (Simulada em Memória)
+        let inventory = {
+            "PROD001": { id: "PROD001", name: "Caixa de Cartão Canelado A1", qty: 120, min: 50 },
+            "PROD002": { id: "PROD002", name: "Fita Adesiva Industrial 50mm", qty: 14, min: 30 },
+            "PROD003": { id: "PROD003", name: "Película Estirável Transparente", qty: 85, min: 25 },
+            "PROD004": { id: "PROD004", name: "Paletes de Madeira Euro", qty: 8, min: 10 }
+        };
+
+        // Estado temporário da extração da IA
+        let temporaryAIExtraction = null;
+
+        // Inicialização do Sistema ao carregar a página
+        window.onload = function() {
+            renderInventory();
+            addLog("system", "Sistema operacional iniciado. Portal do Cliente sincronizado com a base de dados central.");
+            checkAlertsAndRules();
+        };
+
+        // Renderiza a tabela física de stock
+        function renderInventory() {
+            const tbody = document.getElementById("inventory-table-body");
+            tbody.innerHTML = "";
+
+            let totalUnits = 0;
+
+            Object.values(inventory).forEach(item => {
+                totalUnits += item.qty;
+                const isAlert = item.qty <= item.min;
+                
+                const row = document.createElement("tr");
+                row.className = `hover:bg-slate-900/30 transition ${isAlert ? 'bg-amber-950/10' : ''}`;
+                
+                row.innerHTML = `
+                    <td class="p-4 font-mono text-xs text-slate-400">${item.id}</td>
+                    <td class="p-4 font-medium text-white">${item.name}</td>
+                    <td class="p-4 text-center font-mono text-slate-400">${item.min}</td>
+                    <td class="p-4 text-right font-bold text-sm ${isAlert ? 'text-amber-500' : 'text-slate-200'}">${item.qty}</td>
+                    <td class="p-4 text-center">
+                        <span class="px-2 py-0.5 rounded text-[11px] font-semibold ${isAlert ? 'bg-amber-950 text-amber-400 border border-amber-800/40' : 'bg-emerald-950 text-emerald-400 border border-emerald-900/40'}">
+                            ${isAlert ? '⚠️ Stock Crítico' : '✓ Conforme'}
+                        </span>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // Atualiza indicadores do cliente
+            document.getElementById("client-total-units").innerText = totalUnits.toLocaleString();
+        }
+
+        // Processa as regras de negócio e atualiza badges e logs de comunicação externa
+        function checkAlertsAndRules() {
+            let alertCount = 0;
+            Object.values(inventory).forEach(item => {
+                if (item.qty <= item.min) {
+                    alertCount++;
+                }
+            });
+
+            document.getElementById("client-alert-count").innerText = alertCount;
+            const badge = document.getElementById("client-notification-badge");
+
+            if (alertCount > 0) {
+                badge.innerText = `Ligado • ${alertCount} Alertas de Rutura!`;
+                badge.className = "text-amber-400 font-semibold";
+            } else {
+                badge.innerText = "Ligado • Sem alertas ativos";
+                badge.className = "text-emerald-400 font-semibold";
+            }
+        }
+
+        // Canal de Comunicação Automatizado (Simula envio para o Cliente)
+        function addLog(type, message) {
+            const container = document.getElementById("communication-log");
+            const time = new Date().toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            
+            let typeStyles = "";
+            let prefix = "";
+
+            if (type === "system") {
+                typeStyles = "bg-slate-900 border-slate-800 text-slate-300";
+                prefix = "⚙️ [SISTEMA]";
+            } else if (type === "in") {
+                typeStyles = "bg-emerald-950/30 border-emerald-900/50 text-emerald-300";
+                prefix = "📥 [ENTRADA MOC]";
+            } else if (type === "out") {
+                typeStyles = "bg-blue-950/30 border-blue-900/50 text-blue-300";
+                prefix = "📤 [EXPEDIÇÃO]";
+            } else if (type === "alert") {
+                typeStyles = "bg-amber-950/40 border-amber-900/60 text-amber-400 font-medium animate-pulse";
+                prefix = "⚠️ [ALERTA DE RUTURA]";
+            } else if (type === "ai") {
+                typeStyles = "bg-indigo-950/40 border-indigo-900/60 text-indigo-300";
+                prefix = "✨ [IA INTEGRAÇÃO]";
+            }
+
+            const item = document.createElement("div");
+            item.className = `p-3 rounded-lg border text-xs space-y-1 ${typeStyles}`;
+            item.innerHTML = `
+                <div class="flex justify-between items-center opacity-80 text-[10px]">
+                    <span class="font-bold tracking-wider">${prefix}</span>
+                    <span class="font-mono">${time}</span>
+                </div>
+                <p class="leading-relaxed">${message}</p>
+            `;
+            
+            container.insertBefore(item, container.firstChild);
+        }
+
+        // Manipulação do Formulário Manual
+        function handleManualSubmit(event) {
+            event.preventDefault();
+            const sku = document.getElementById("form-product").value;
+            const type = document.querySelector('input[name="op-type"]:checked').value;
+            const qty = parseInt(document.getElementById("form-qty").value);
+
+            processTransaction(sku, type, qty, false);
+            document.getElementById("form-qty").value = "";
+        }
+
+        // Executa a alteração matemática de stock e despacha a notificação para o cliente
+        function processTransaction(sku, type, qty, isAIAssisted) {
+            if (!inventory[sku]) return;
+
+            const oldQty = inventory[sku].qty;
+
+            if (type === "IN") {
+                inventory[sku].qty += qty;
+                renderInventory();
+                
+                const logType = isAIAssisted ? "ai" : "in";
+                addLog(logType, `Notificação enviada ao cliente: Foram adicionadas ${qty} unidades do artigo "${inventory[sku].name}". Novo Stock: ${inventory[sku].qty}.`);
+                
+                // Se saiu do estado crítico, notifica o cliente
+                if (oldQty <= inventory[sku].min && inventory[sku].qty > inventory[sku].min) {
+                    addLog("system", `Regularização: O artigo "${inventory[sku].name}" restabeleceu o nível de segurança.`);
+                }
+            } else if (type === "OUT") {
+                if (inventory[sku].qty < qty) {
+                    alert(`Operação Recusada: Stock insuficiente do produto para expedição! Disponível: ${inventory[sku].qty}`);
+                    return;
+                }
+                inventory[sku].qty -= qty;
+                renderInventory();
+                addLog("out", `Notificação de expedição: ${qty} unidades de "${inventory[sku].name}" saíram do armazém com destino ao destinatário final.`);
+                
+                // Dispara o gatilho automático de Alerta se descer do limite
+                if (inventory[sku].qty <= inventory[sku].min) {
+                    addLog("alert", `AVISO AUTOMÁTICO ENVIADO AO CLIENTE: O artigo "${inventory[sku].name}" atingiu o limite crítico (${inventory[sku].qty} un.). Reabastecimento urgente necessário.`);
+                }
+            }
+            checkAlertsAndRules();
+        }
+
+        // COMPONENTE DE IA: Controlo das funções de Janela Modal e Simulação OCR
+        function openAIModal() {
+            document.getElementById("ai-modal").classList.remove("hidden");
+            resetAIModalFields();
+        }
+
+        function closeAIModal() {
+            document.getElementById("ai-modal").classList.add("hidden");
+        }
+
+        function resetAIModalFields() {
+            document.getElementById("ai-file-input").value = "";
+            document.getElementById("upload-prompt").classList.remove("hidden");
+            document.getElementById("upload-preview-container").classList.add("hidden");
+            document.getElementById("ai-loading").classList.add("hidden");
+            document.getElementById("ai-result").classList.add("hidden");
+            document.getElementById("ai-btn-process").disabled = true;
+            document.getElementById("ai-btn-process").classList.remove("hidden");
+            document.getElementById("ai-btn-apply").classList.add("hidden");
+            temporaryAIExtraction = null;
+        }
+
+        // Preview da imagem carregada
+        function previewImage(event) {
+            const input = event.target;
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById("upload-preview").src = e.target.result;
+                    document.getElementById("upload-filename").innerText = input.files[0].name;
+                    document.getElementById("upload-prompt").classList.add("hidden");
+                    document.getElementById("upload-preview-container").classList.remove("hidden");
+                    document.getElementById("ai-btn-process").disabled = false;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Simulação da Inteligência Artificial (Rede Neutra Artificial + Processamento de Imagem)
+        function simulateAIProcessing() {
+            document.getElementById("ai-btn-process").classList.add("hidden");
+            document.getElementById("ai-loading").classList.remove("hidden");
+            document.getElementById("ai-result").classList.add("hidden");
+
+            const aiMode = document.getElementById("ai-mode").value;
+
+            // Simula uma resposta baseada no modo selecionado após 2 segundos
+            setTimeout(() => {
+                document.getElementById("ai-loading").classList.add("hidden");
+                document.getElementById("ai-result").classList.remove("hidden");
+                document.getElementById("ai-btn-apply").classList.remove("hidden");
+
+                if (aiMode === "invoice") {
+                    // Simula leitura de uma nota de fornecedor
+                    temporaryAIExtraction = { sku: "PROD002", qty: 50 };
+                    document.getElementById("ai-extracted-product").innerText = "Fita Adesiva Industrial 50mm (Detectado via OCR Factura)";
+                    document.getElementById("ai-extracted-qty").innerText = "50 unidades";
+                } else {
+                    // Simula reconhecimento visual do produto físico
+                    temporaryAIExtraction = { sku: "PROD004", qty: 15 };
+                    document.getElementById("ai-extracted-product").innerText = "Paletes de Madeira Euro (Detectado via Visão Computacional)";
+                    document.getElementById("ai-extracted-qty").innerText = "15 unidades";
+                }
+            }, 2000);
+        }
+
+        // Confirma e aplica o processamento da IA ao stock real do armazém
+        function applyAIResult() {
+            if (temporaryAIExtraction) {
+                processTransaction(temporaryAIExtraction.sku, "IN", temporaryAIExtraction.qty, true);
+                closeAIModal();
+            }
+        }
+    </script>
+</body>
+</html>
